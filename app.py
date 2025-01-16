@@ -28,3 +28,6 @@ def wait_for_element(driver, by, value, timeout=60):
     return WebDriverWait(driver, timeout).until(
         EC.presence_of_element_located((by, value))
     )
+
+
+#perdao hoje nao
