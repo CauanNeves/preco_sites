@@ -29,5 +29,7 @@ def wait_for_element(driver, by, value, timeout=60):
         EC.presence_of_element_located((by, value))
     )
 
-
-#perdao hoje nao
+def main():
+    links= ['https://www.terabyteshop.com.br/produto/31959/gabinete-gamer-redragon-wideload-extreme-mid-tower-rgb-vidro-curvado-temperado-atx-black-sem-fonte-sem-fan-ca-605b', 'https://www.mercadolivre.com.br/gabinete-wideload-extreme-vidro-curvado-ca-605b-cor-preto/p/MLB38199796?matt_tool=18956390&utm_source=google_shopping&utm_medium=organic&pdp_filters=item_id:MLB5033471102&from=gshop']
+    for id, link in enumerate(links):
+        driver= start_driver()
