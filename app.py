@@ -29,10 +29,10 @@ def wait_for_element(driver, by, value, timeout=10):
 def formatted_price(price):
     return float(price.replace('R$', '').strip().replace(',', '.'))
 
-# Função genérica para scraping
+# Scraping
 def scrape_price(driver, link, xpaths, site, prices_dict):
     try:
-        print(f"Acessando: {site}")
+        print(f'Acessando: {site}')
         driver.get(link)
         
         if site not in prices_dict:
@@ -42,11 +42,12 @@ def scrape_price(driver, link, xpaths, site, prices_dict):
             try:
                 element = wait_for_element(driver, By.XPATH, xpath).text
                 prices_dict[site][key] = formatted_price(element)
-                return prices_dict
+            
             except Exception as e:
                 print(f"Erro ao buscar o preço '{key}' em {site}: {e}")
+                
     except Exception as e:
-        print(f"Erro ao acessar o site {site}: {e}")
+        print(f'Erro ao acessar o site {site}: {e}')
 
 # Função principal
 def main():
@@ -73,9 +74,10 @@ def main():
     try:
         prices = {}
         for link in links:
-            prices = scrape_price(driver, link['url'], link['xpaths'], link['site'], prices)
-            print(f'Preços: {prices}')
-        print(prices)
+            scrape_price(driver, link['url'], link['xpaths'], link['site'], prices)
+            
+        for site, price_data in prices.items():
+            print(f'{site}: {price_data}')
             
     except Exception as e:
         print(f'Erro ao consultar os preços: {e}')
