@@ -3,7 +3,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from time import sleep
+
 
 # Configuração do WebDriver
 def start_driver():
@@ -30,42 +30,56 @@ def formatted_price(price):
     return float(price.replace('R$', '').strip().replace(',', '.'))
 
 # Função genérica para scraping
-def scrape_price(driver, link, xpaths):
-    driver.get(link)
-    prices = {}
-    for key, xpath in xpaths.items():
-        element = wait_for_element(driver, By.XPATH, xpath).text
-        prices[key] = formatted_price(element)
-    return prices
+def scrape_price(driver, link, xpaths, site, prices_dict):
+    try:
+        print(f"Acessando: {site}")
+        driver.get(link)
+        
+        if site not in prices_dict:
+            prices_dict[site] = {}
+        
+        for key, xpath in xpaths.items():
+            try:
+                element = wait_for_element(driver, By.XPATH, xpath).text
+                prices_dict[site][key] = formatted_price(element)
+                return prices_dict
+            except Exception as e:
+                print(f"Erro ao buscar o preço '{key}' em {site}: {e}")
+    except Exception as e:
+        print(f"Erro ao acessar o site {site}: {e}")
 
 # Função principal
 def main():
     links = [
-        {   
-            "site": "Terabyte",
-            "url": "https://www.terabyteshop.com.br/produto/31959/gabinete-gamer-redragon-wideload-extreme-mid-tower-rgb-vidro-curvado-temperado-atx-black-sem-fonte-sem-fan-ca-605b",
-            "xpaths": {
-                "price_in_cash": '//p[@id="valVista"]',
-                "price_full": '(//span[@id="valParc"])[2]'
+                {
+            'site': 'Kabum',
+            'url': 'https://www.kabum.com.br/produto/627947',
+            'xpaths': {
+                'price_in_cash': '//div/h4[@class="sc-5492faee-2 ipHrwP finalPrice"]',
+                'price_full': '//div/b[@class="regularPrice"]'
             }
         },
-        {
-            "site": "Kabum",
-            "url": "https://www.kabum.com.br/produto/627947",
-            "xpaths": {
-                "price_in_cash": '//div/h4[@class="sc-5492faee-2 ipHrwP finalPrice"]',
-                "price_full": '//div/b[@class="regularPrice"]'
+        {   
+            'site': 'Terabyte',
+            'url': 'https://www.terabyteshop.com.br/produto/31959/gabinete-gamer-redragon-wideload-extreme-mid-tower-rgb-vidro-curvado-temperado-atx-black-sem-fonte-sem-fan-ca-605b',
+            'xpaths': {
+                'price_in_cash': '//p[@id="valVista"]',
+                'price_full': '(//span[@id="valParc"])[2]'
             }
         }
     ]
 
     driver = start_driver()
     try:
-        for link_info in links:
-            prices = scrape_price(driver, link_info["url"], link_info["xpaths"])
-            print(f"Preços para {link_info['site']}: {prices}")
+        prices = {}
+        for link in links:
+            prices = scrape_price(driver, link['url'], link['xpaths'], link['site'], prices)
+            print(f'Preços: {prices}')
+        print(prices)
+            
     except Exception as e:
         print(f'Erro ao consultar os preços: {e}')
+        
     finally:
         driver.quit()
         print('Programa Finalizado!')
