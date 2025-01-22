@@ -4,7 +4,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
-
 # Configuração do WebDriver
 def start_driver():
     chrome_options = Options()
@@ -88,3 +87,8 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+'''
+Ideias:
+Calcular o frete do usuário, comparar os preços dos sites e ver qual a melhor opção
+'''
