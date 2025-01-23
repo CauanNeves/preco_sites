@@ -77,7 +77,12 @@ def main():
             
         for site, price_data in prices.items():
             print(f'{site}: {price_data}')
-            
+        
+        if prices['Kabum']['price_in_cash'] < prices['Terabyte']['price_in_cash']:
+            print('\nCaso você for comprar à vista o melhor preço é na loja Kabum')
+        else:
+            print('\nCaso você for comprar à vista o melhor preço é na loja Terabyte')
+          
     except Exception as e:
         print(f'Erro ao consultar os preços: {e}')
         
