@@ -71,6 +71,18 @@ def main():
 
     driver = start_driver()
     try:
+        print('''
+  ▄████ ▄▄▄      ▄▄▄▄   ██▓███▄    █▓████▄▄▄█████▓█████      ▄████ ▄▄▄      ███▄ ▄███▓█████ ██▀███  
+ ██▒ ▀█▒████▄   ▓█████▄▓██▒██ ▀█   █▓█   ▓  ██▒ ▓▓█   ▀     ██▒ ▀█▒████▄   ▓██▒▀█▀ ██▓█   ▀▓██ ▒ ██▒
+▒██░▄▄▄▒██  ▀█▄ ▒██▒ ▄█▒██▓██  ▀█ ██▒███ ▒ ▓██░ ▒▒███      ▒██░▄▄▄▒██  ▀█▄ ▓██    ▓██▒███  ▓██ ░▄█ ▒
+░▓█  ██░██▄▄▄▄██▒██░█▀ ░██▓██▒  ▐▌██▒▓█  ░ ▓██▓ ░▒▓█  ▄    ░▓█  ██░██▄▄▄▄██▒██    ▒██▒▓█  ▄▒██▀▀█▄  
+░▒▓███▀▒▓█   ▓██░▓█  ▀█░██▒██░   ▓██░▒████▒▒██▒ ░░▒████▒   ░▒▓███▀▒▓█   ▓██▒██▒   ░██░▒████░██▓ ▒██▒
+ ░▒   ▒ ▒▒   ▓▒█░▒▓███▀░▓ ░ ▒░   ▒ ▒░░ ▒░ ░▒ ░░  ░░ ▒░ ░    ░▒   ▒ ▒▒   ▓▒█░ ▒░   ░  ░░ ▒░ ░ ▒▓ ░▒▓░
+  ░   ░  ▒   ▒▒ ▒░▒   ░ ▒ ░ ░░   ░ ▒░░ ░  ░  ░    ░ ░  ░     ░   ░  ▒   ▒▒ ░  ░      ░░ ░  ░ ░▒ ░ ▒░
+░ ░   ░  ░   ▒   ░    ░ ▒ ░  ░   ░ ░   ░   ░        ░      ░ ░   ░  ░   ▒  ░      ░     ░    ░░   ░ 
+      ░      ░  ░░      ░          ░   ░  ░         ░  ░         ░      ░  ░      ░     ░  ░  ░     
+                      ░                                                                             
+                      ''')
         prices = {}
         for link in links:
             scrape_price(driver, link['url'], link['xpaths'], link['site'], prices)
@@ -79,9 +91,9 @@ def main():
             print(f'{site}: {price_data}')
         
         if prices['Kabum']['price_in_cash'] < prices['Terabyte']['price_in_cash']:
-            print('\nCaso você for comprar à vista o melhor preço é na loja Kabum')
+            print(f"\nCaso você for comprar à vista o melhor preço é na loja Kabum com o preço de {prices['Kabum']['price_in_cash']} reais.")
         else:
-            print('\nCaso você for comprar à vista o melhor preço é na loja Terabyte')
+            print(f"\nCaso você for comprar à vista o melhor preço é na loja Terabyte, como o preço de {prices['Kabum']['price_in_cash']} reais.")
           
     except Exception as e:
         print(f'Erro ao consultar os preços: {e}')
