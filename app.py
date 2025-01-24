@@ -91,9 +91,9 @@ def main():
             print(f'{site}: {price_data}')
         
         if prices['Kabum']['price_in_cash'] < prices['Terabyte']['price_in_cash']:
-            print(f"\nCaso você for comprar à vista o melhor preço é na loja Kabum com o preço de {prices['Kabum']['price_in_cash']} reais.")
+            print(f"\nCaso você for comprar à vista o melhor preço é na loja Kabum com o valor de {prices['Kabum']['price_in_cash']} reais.")
         else:
-            print(f"\nCaso você for comprar à vista o melhor preço é na loja Terabyte, como o preço de {prices['Kabum']['price_in_cash']} reais.")
+            print(f"\nCaso você for comprar à vista o melhor preço é na loja Terabyte, como o valor de {prices['Kabum']['price_in_cash']} reais.")
           
     except Exception as e:
         print(f'Erro ao consultar os preços: {e}')
