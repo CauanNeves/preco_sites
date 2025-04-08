@@ -41,6 +41,9 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
         if site not in prices_freight:
             prices_freight[site] = {}
         
+        if site == 'Terabyte':
+            wait_for_element(driver, By.XPATH, '(//button[@class= "close"])[3]').click()
+
         #Preço
         for key, xpath in xpaths.items():
             try:
@@ -53,11 +56,12 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
         if freight_actions: #Verifica se existe e não está vazia
             for action in freight_actions: #Executa cada ação
                 try:
+                    sleep(0.5)
                     result = action(driver) #Retorna os valores de cada função (no caso só a última que vai ter algum valor)
                     if isinstance(result, str):
                         prices_freight[site]['frete'] = formatted_price(result)
                 except Exception as e:
-                    print(f"Erro ao executar ação de frete em {site}: {e}")
+                    print(f"Erro ao executar ação de frete em {site}: Bloqueio do bot")
                 
     except Exception as e:
         print(f'Erro ao acessar o site {site}: {e}')
@@ -73,6 +77,7 @@ def main():
                 'price_full': '//div/b[@class="regularPrice"]'
             },
             'xpaths_freight': [
+                lambda driver : driver.execute_script("window.scrollTo(0, 300);"),
                 lambda driver: driver.find_element(By.ID, 'inputCalcularFrete').send_keys('23900650'),
                 lambda driver: driver.find_element(By.ID, 'botaoCalcularFrete').click(),
                 lambda driver: wait_for_element(driver, By.XPATH, '(//span[@class= "sc-4253a8e4-2 etvZuo"])[2]').text
@@ -85,7 +90,13 @@ def main():
                 'price_in_cash': '//p[@id="valVista"]',
                 'price_full': '(//span[@id="valParc"])[2]'
             },
-            'xpaths_freight': []
+            'xpaths_freight': [
+                lambda driver: driver.execute_script('window.scrollTo(0, 600);'),
+                lambda driver: driver.find_element(By.XPATH, '//button[@class= "btComDet btn tbt_comprar"]').click(),
+                lambda driver: driver.find_element(By.XPATH, '//input[@id="cep"]').send_keys('23900650'),
+                lambda driver: driver.find_element(By.XPATH, '//button[@class= "calcFrete btcalcular visible"]').click(),
+                lambda driver: wait_for_element(driver, By.XPATH, '(//div[@class= "minicart-frete-value"])[1]').text
+            ]
         }
     ]
 
@@ -107,20 +118,21 @@ def main():
         freight = {}
         for link in links:
             scrape_price(driver, link['url'], link['xpaths_price'], link['site'], prices, freight, freight_actions=link['xpaths_freight'])
-        
-        for site, price_data in prices.items():
-            print(f'{site}: {price_data}')
-            if site in freight and freight[site].get('frete'):
-                print(f"  Frete: {freight[site]['frete']}")
-
             
         for site, price_data in prices.items():
             print(f'{site}: {price_data}')
+            if site in freight and freight[site].get('frete'):
+                print(f"{freight[site]}: {freight[site]['frete']}")
         
-        if prices['Kabum']['price_in_cash'] < prices['Terabyte']['price_in_cash']:
+        if (prices['Kabum']['price_in_cash'] + freight['Kabum'][freight]) < (prices['Terabyte']['price_in_cash'] + freight['Terabyte'][freight]):
             print(f"\nCaso você for comprar à vista o melhor preço é na loja Kabum com o valor de {prices['Kabum']['price_in_cash']} reais.")
         else:
             print(f"\nCaso você for comprar à vista o melhor preço é na loja Terabyte, como o valor de {prices['Kabum']['price_in_cash']} reais.")
+
+        if (prices['Kabum']['price_full'] + freight['Kabum'][freight]) < (prices['Terabyte']['price_full'] + freight['Terabyte'][freight]):
+            print(f"\nCaso você for comprar parcelado o melhor preço é na loja Kabum com o valor de {prices['Kabum']['price_full']} reais.")
+        else:
+            print(f"\nCaso você for comprar parcelado o melhor preço é na loja Terabyte, como o valor de {prices['Kabum']['price_in_cash']} reais.")
           
     except Exception as e:
         print(f'Erro ao consultar os preços: {e}')
