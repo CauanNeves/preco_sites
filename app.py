@@ -4,20 +4,26 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from time import sleep
+import undetected_chromedriver as uc
 
-# Configuração do WebDriver
 def start_driver():
-    chrome_options = Options()
+    chrome_options = uc.ChromeOptions()
     chrome_options.add_argument('--lang=pt-BR')
+    chrome_options.add_argument('--disable-blink-features=AutomationControlled')
     chrome_options.add_argument('--start-maximized')
     chrome_options.add_argument('--incognito')
-    chrome_options.add_experimental_option('prefs', {
+    
+    chrome_prefs = {
         'download.directory_upgrade': True,
         'download.prompt_for_download': False,
         'profile.default_content_setting_values.notifications': 2,
         'profile.default_content_setting_values.automatic_downloads': 1,
-    })
-    return webdriver.Chrome(options=chrome_options)
+    }
+    chrome_options.add_experimental_option('prefs', chrome_prefs)
+
+    driver = uc.Chrome(options=chrome_options)
+    return driver
+
 
 # Função para esperar o elemento
 def wait_for_element(driver, by, value, timeout=10):
@@ -96,7 +102,7 @@ def main():
             'xpaths_freight': [
                 lambda driver: driver.execute_script('window.scrollTo(0, 600);'),
                 lambda driver: driver.find_element(By.XPATH, '//button[@class= "btComDet btn tbt_comprar"]').click(),
-                lambda driver: wait_for_element(driver, By.ID, 'inputCalcularFrete').send_keys('23900650'),
+                lambda driver: wait_for_element(driver, By.XPATH, '//input[@class= "cepInput shopp-cep"]').send_keys('23900650'),
                 lambda driver: driver.find_element(By.XPATH, '//button[@class= "calcFrete btcalcular visible"]').click(),
                 lambda driver: wait_for_element(driver, By.XPATH, '(//div[@class= "minicart-frete-value"])[1]').text
             ]
@@ -141,6 +147,7 @@ def main():
         print(f'Erro ao consultar os preços: {e}')
         
     finally:
+        driver.close()
         driver.quit()
         print('Programa Finalizado!')
 
