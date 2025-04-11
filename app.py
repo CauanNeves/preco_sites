@@ -8,6 +8,9 @@ import undetected_chromedriver as uc
 import sys
 import io
 
+# Evita chamada duplicada de quit() após o script finalizar
+uc.Chrome.__del__ = lambda self: None
+
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def start_driver():
@@ -159,6 +162,7 @@ def main():
     finally:
         if driver:
             driver.quit()
+            driver = None  # <- Evita o __del__ tentar agir em algo já encerrado
         print('Programa Finalizado!')
 
 if __name__ == '__main__':
