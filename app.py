@@ -5,6 +5,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from time import sleep
 import undetected_chromedriver as uc
+import sys
+import io
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def start_driver():
     chrome_options = uc.ChromeOptions()
@@ -48,12 +52,13 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
             prices_freight[site] = {}
         
         if site == 'Terabyte':
-            wait_for_element(driver, By.XPATH, '(//button[@class= "close"])[3]')
-            sleep(0.5)
+            sleep(2)
             driver.execute_script("""document.evaluate('(//button[@class= "close"])[3]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click();""")
+            driver.execute_script('window.scrollTo(0, 600);')
+            sleep(0.5)
 
         #Preço
-        for key, xpath in xpaths.items():
+        for key, xpath in xpaths.items():  
             try:
                 element = wait_for_element(driver, By.XPATH, xpath).text
                 prices_dict[site][key] = formatted_price(element)
@@ -69,7 +74,7 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
                     if isinstance(result, str):
                         prices_freight[site]['frete'] = formatted_price(result)
                 except Exception as e:
-                    print(f"Erro ao executar ação de frete em {site}: Bloqueio do bot")
+                    print(f"Erro ao executar ação de frete em {site}: {e}")
                     break
                 
     except Exception as e:
@@ -132,23 +137,28 @@ def main():
             print(f'{site}: {price_data}')
             if site in freight and freight[site].get('frete'):
                 print(f"{site}: {freight[site]}")
-        
-        if (float(prices['Kabum']['price_in_cash']) + (float(freight['Kabum']['frete'])) < (float(prices['Terabyte']['price_in_cash']) + float(freight['Terabyte']['frete']))):
-            print(f"\nCaso você for comprar à vista o melhor preço é na loja Kabum com o valor de {prices['Kabum']['price_in_cash']} reais.")
-        else:
-            print(f"\nCaso você for comprar à vista o melhor preço é na loja Terabyte, como o valor de {prices['Kabum']['price_in_cash']} reais.")
 
-        if (float(prices['Kabum']['price_full']) + (float(freight['Kabum']['frete'])) < (float(prices['Terabyte']['price_full']) + float(freight['Terabyte']['frete']))):
-            print(f"\nCaso você for comprar parcelado o melhor preço é na loja Kabum com o valor de {prices['Kabum']['price_full']} reais.")
+        kabum_price_in_cash = round(float(prices['Kabum']['price_in_cash']) + float(freight['Kabum']['frete']), 2)
+        kabum_price_full = round(float(prices['Kabum']['price_full']) + float(freight['Kabum']['frete']), 2)
+        terabyte_price_in_cash = round(float(prices['Terabyte']['price_in_cash']) + float(freight['Terabyte']['frete']), 2)
+        terabyte_price_full = round(float(prices['Terabyte']['price_full']) + float(freight['Terabyte']['frete']), 2)
+
+        if (kabum_price_in_cash < terabyte_price_in_cash):
+            print(f"\nCaso você for comprar à vista o melhor preço é na loja Kabum com o valor de {kabum_price_in_cash} reais.")
         else:
-            print(f"\nCaso você for comprar parcelado o melhor preço é na loja Terabyte, como o valor de {prices['Kabum']['price_in_cash']} reais.")
+            print(f"\nCaso você for comprar à vista o melhor preço é na loja Terabyte, como o valor de {terabyte_price_in_cash} reais.")
+
+        if (kabum_price_full < terabyte_price_full):
+            print(f"\nCaso você for comprar parcelado o melhor preço é na loja Kabum com o valor de {kabum_price_full} reais.")
+        else:
+            print(f"\nCaso você for comprar parcelado o melhor preço é na loja Terabyte, como o valor de {terabyte_price_full} reais.")
           
     except Exception as e:
         print(f'Erro ao consultar os preços: {e}')
         
     finally:
-        driver.close()
-        driver.quit()
+        if driver:
+            driver.quit()
         print('Programa Finalizado!')
 
 if __name__ == '__main__':
