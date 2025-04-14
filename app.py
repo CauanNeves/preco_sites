@@ -7,10 +7,14 @@ from time import sleep
 import undetected_chromedriver as uc
 import sys
 import io
+from colorama import Fore, Style, init
+#Resetando a cor do prompt 
+init(autoreset=True)
 
 # Evita chamada duplicada de quit() após o script finalizar
 uc.Chrome.__del__ = lambda self: None
 
+#Resolvendo erro wind6
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def start_driver():
@@ -45,7 +49,7 @@ def formatted_price(price):
 # Scraping
 def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freight_actions=None):
     try:
-        print(f'Acessando: {site}')
+        print(Fore.CYAN + f'Acessando: {site}')
         driver.get(link)
         
         if site not in prices_dict:
@@ -54,28 +58,29 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
         if site not in prices_freight:
             prices_freight[site] = {}
         
+        #Fecha a aba de anúncio
         if site == 'Terabyte':
             sleep(2)
             driver.execute_script("""document.evaluate('(//button[@class= "close"])[3]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click();""")
             driver.execute_script('window.scrollTo(0, 600);')
-            sleep(0.5)
+            sleep(1)
 
-        #Preço
+        #Coletando os preços
         for key, xpath in xpaths.items():  
             try:
                 element = wait_for_element(driver, By.XPATH, xpath).text
-                prices_dict[site][key] = formatted_price(element)
+                prices_dict[site][key] = formatted_price(element) #Adiciona o valor formatado ao dicionário
             except Exception as e:
                 print(f"Erro ao buscar o preço '{key}' em {site}: {e}")
         
-        #Frete
+        #Coletando o frete
         if freight_actions: #Verifica se existe e não está vazia
             for action in freight_actions: #Executa cada ação
                 try:
                     sleep(0.7)
                     result = action(driver) #Retorna os valores de cada função (no caso só a última que vai ter algum valor)
                     if isinstance(result, str):
-                        prices_freight[site]['frete'] = formatted_price(result)
+                        prices_freight[site]['frete'] = formatted_price(result) #Adiciona o valor formatado ao dicionário
                 except Exception as e:
                     print(f"Erro ao executar ação de frete em {site}: {e}")
                     break
@@ -119,7 +124,7 @@ def main():
 
     driver = start_driver()
     try:
-        print('''
+        print(Fore.LIGHTGREEN_EX +'''
   ▄████ ▄▄▄      ▄▄▄▄   ██▓███▄    █▓████▄▄▄█████▓█████      ▄████ ▄▄▄      ███▄ ▄███▓█████ ██▀███  
  ██▒ ▀█▒████▄   ▓█████▄▓██▒██ ▀█   █▓█   ▓  ██▒ ▓▓█   ▀     ██▒ ▀█▒████▄   ▓██▒▀█▀ ██▓█   ▀▓██ ▒ ██▒
 ▒██░▄▄▄▒██  ▀█▄ ▒██▒ ▄█▒██▓██  ▀█ ██▒███ ▒ ▓██░ ▒▒███      ▒██░▄▄▄▒██  ▀█▄ ▓██    ▓██▒███  ▓██ ░▄█ ▒
@@ -139,23 +144,30 @@ def main():
         for site, price_data in prices.items():
             print(f'{site}: {price_data}')
             if site in freight and freight[site].get('frete'):
-                print(f"{site}: {freight[site]}")
+                print(f'{site}: {freight[site]}')
+        
+        def calcular_preco_total(loja, tipo_preco):
+            return round(float(prices[loja][tipo_preco]) + float(freight[loja]['frete']), 2)
 
-        kabum_price_in_cash = round(float(prices['Kabum']['price_in_cash']) + float(freight['Kabum']['frete']), 2)
-        kabum_price_full = round(float(prices['Kabum']['price_full']) + float(freight['Kabum']['frete']), 2)
-        terabyte_price_in_cash = round(float(prices['Terabyte']['price_in_cash']) + float(freight['Terabyte']['frete']), 2)
-        terabyte_price_full = round(float(prices['Terabyte']['price_full']) + float(freight['Terabyte']['frete']), 2)
+        lojas = ['Kabum', 'Terabyte']
+        tipos = {
+            'price_in_cash': 'à vista',
+            'price_full': 'parcelado'
+        }
 
-        if (kabum_price_in_cash < terabyte_price_in_cash):
-            print(f"\nCaso você for comprar à vista o melhor preço é na loja Kabum com o valor de {kabum_price_in_cash} reais.")
-        else:
-            print(f"\nCaso você for comprar à vista o melhor preço é na loja Terabyte, como o valor de {terabyte_price_in_cash} reais.")
+        precos_totais = {
+            loja: {
+                tipo: calcular_preco_total(loja, tipo)
+                for tipo in tipos
+            }
+            for loja in lojas
+        }
 
-        if (kabum_price_full < terabyte_price_full):
-            print(f"\nCaso você for comprar parcelado o melhor preço é na loja Kabum com o valor de {kabum_price_full} reais.")
-        else:
-            print(f"\nCaso você for comprar parcelado o melhor preço é na loja Terabyte, como o valor de {terabyte_price_full} reais.")
-          
+        for tipo, descricao in tipos.items():
+            melhor_loja = min(lojas, key=lambda loja: precos_totais[loja][tipo])
+            melhor_preco = precos_totais[melhor_loja][tipo]
+            print(Fore.LIGHTYELLOW_EX + f"\nCaso você for comprar {descricao}, o melhor preço é na loja {melhor_loja} com o valor de {melhor_preco} reais.")
+        
     except Exception as e:
         print(f'Erro ao consultar os preços: {e}')
         
