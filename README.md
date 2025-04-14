@@ -3,7 +3,7 @@
 ---
 
 ## 🚀 Sobre o Projeto
-Este projeto utiliza a biblioteca **Selenium** para realizar o _web scraping_ de preços em diferentes sites. Ele permite comparar preços de produtos em lojas específicas e exibir o melhor preço encontrado para compras à vista.  
+Este projeto utiliza a biblioteca **Selenium** para realizar o _web scraping_ de preços em diferentes sites. Ele permite comparar preços de produtos em lojas específicas e exibir o melhor preço encontrado para compras à vista e parcelado, Além de calcular o frete.  
 
 ---
 
