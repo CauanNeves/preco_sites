@@ -1,4 +1,3 @@
-from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -7,7 +6,7 @@ from time import sleep
 import undetected_chromedriver as uc
 import sys
 import io
-from colorama import Fore, Style, init
+from colorama import Fore, init
 #Resetando a cor do prompt 
 init(autoreset=True)
 
@@ -44,7 +43,7 @@ def wait_for_element(driver, by, value, timeout=10):
 
 # Formatação de preço
 def formatted_price(price):
-    return float(price.replace('R$', '').strip().replace(',', '.'))
+    return float(price.replace('R$', '').replace('ou', '').strip().replace(',', '.'))
 
 # Scraping
 def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freight_actions=None):
@@ -60,7 +59,7 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
         
         #Fecha a aba de anúncio
         if site == 'Terabyte':
-            sleep(2)
+            sleep(2.5)
             driver.execute_script("""document.evaluate('(//button[@class= "close"])[3]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click();""")
             driver.execute_script('window.scrollTo(0, 600);')
             sleep(1)
@@ -80,7 +79,10 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
                     sleep(0.7)
                     result = action(driver) #Retorna os valores de cada função (no caso só a última que vai ter algum valor)
                     if isinstance(result, str):
-                        prices_freight[site]['frete'] = formatted_price(result) #Adiciona o valor formatado ao dicionário
+                        try:
+                            prices_freight[site]['frete'] = formatted_price(result) #Adiciona o valor formatado ao dicionário
+                        except:
+                            prices_freight[site]['frete'] = 'Frete Grátis' #Adiciona o valor ao dicionário (provavelmente fretwe grátis)
                 except Exception as e:
                     print(f"Erro ao executar ação de frete em {site}: {e}")
                     break
@@ -91,18 +93,48 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
 # Função principal
 def main():
     links = [
-                {
-            'site': 'Kabum',
+        {
+            'site': 'Magazine Luiza',
+            'url': 'https://www.magazineluiza.com.br/gabinete-gamer-redragon-wideload-extreme-rgb-preto-vidro-curvado-sem-fan-mid-tower-atx/p/ej110899ch/in/gbgm/?partner_id=64853&utm_source=pdp_desk&utm_medium=share',
+            'xpaths_price': {
+                'price_in_cash': '//p[@class= "sc-dcJsrY eLxcFM sc-kUdmhA cvHkKW"]',
+                'price_full': '//p[@class= "sc-dcJsrY bTcHXB sc-jpSpfa jqvUde"]'
+            },
+            'xpaths_freight':[
+                lambda driver: driver.execute_script('window.scrollTo(0, 300);'),
+                lambda driver: driver.find_element(By.XPATH, '//span[@class= "sc-fscmHZ ldoANx"]').click(),
+                lambda driver: wait_for_element(driver, By.ID, 'zipcode').send_keys('23900650'),
+                lambda driver: sleep(2),
+                lambda driver: driver.execute_script('window.scrollTo(0, 300);'),
+                lambda driver: wait_for_element(driver, By.XPATH, '//p[@class= "sc-dcJsrY eLxcFM sc-pKqro cAJMya"]').text
+            ]
+        },
+        {
+            'site': 'Kabum (1)',
             'url': 'https://www.kabum.com.br/produto/627947',
             'xpaths_price': {
                 'price_in_cash': '//div/h4[@class="sc-5492faee-2 ipHrwP finalPrice"]',
                 'price_full': '//div/b[@class="regularPrice"]'
             },
             'xpaths_freight': [
-                lambda driver : driver.execute_script("window.scrollTo(0, 300);"),
+                
                 lambda driver: driver.find_element(By.ID, 'inputCalcularFrete').send_keys('23900650'),
                 lambda driver: driver.find_element(By.ID, 'botaoCalcularFrete').click(),
                 lambda driver: wait_for_element(driver, By.XPATH, '(//span[@class= "sc-4253a8e4-2 etvZuo"])[2]').text
+                ] 
+        },
+        {
+            'site': 'Kabum (2)',
+            'url': 'https://www.kabum.com.br/produto/545902',
+            'xpaths_price': {
+                'price_in_cash': '//div/h4[@class="sc-5492faee-2 ipHrwP finalPrice"]',
+                'price_full': '//div/b[@class="regularPrice"]'
+            },
+            'xpaths_freight': [
+                lambda driver : driver.execute_script('window.scrollTo(0, 300);'),
+                lambda driver: driver.find_element(By.ID, 'inputCalcularFrete').send_keys('23900650'),
+                lambda driver: driver.find_element(By.ID, 'botaoCalcularFrete').click(),
+                lambda driver: wait_for_element(driver, By.XPATH, '//span[@class= "sc-4253a8e4-2 etvZuo"]').text
                 ] 
         },
         {   
@@ -147,9 +179,12 @@ def main():
                 print(f'{site}: {freight[site]}')
         
         def calcular_preco_total(loja, tipo_preco):
-            return round(float(prices[loja][tipo_preco]) + float(freight[loja]['frete']), 2)
+            if freight[loja]['frete'] != 'Frete Grátis':
+                return round(float(prices[loja][tipo_preco]) + float(freight[loja]['frete']), 2)
+            else:
+                return float(prices[loja][tipo_preco])
 
-        lojas = ['Kabum', 'Terabyte']
+        lojas = ['Magazine Luiza','Kabum (1)', 'Kabum (2)', 'Terabyte']
         tipos = {
             'price_in_cash': 'à vista',
             'price_full': 'parcelado'
