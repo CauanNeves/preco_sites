@@ -70,7 +70,7 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
                 element = wait_for_element(driver, By.XPATH, xpath).text
                 prices_dict[site][key] = formatted_price(element) #Adiciona o valor formatado ao dicionário
             except Exception as e:
-                print(f"Erro ao buscar o preço '{key}' em {site}: {e}")
+                print(f"Erro ao buscar o preço '{key}' em {site}.")
         
         #Coletando o frete
         if freight_actions: #Verifica se existe e não está vazia
@@ -98,7 +98,7 @@ def main():
             'url': 'https://www.magazineluiza.com.br/gabinete-gamer-redragon-wideload-extreme-rgb-preto-vidro-curvado-sem-fan-mid-tower-atx/p/ej110899ch/in/gbgm/?partner_id=64853&utm_source=pdp_desk&utm_medium=share',
             'xpaths_price': {
                 'price_in_cash': '//p[@class= "sc-dcJsrY eLxcFM sc-kUdmhA cvHkKW"]',
-                'price_full': '//p[@class= "sc-dcJsrY bTcHXB sc-jpSpfa jqvUde"]'
+                'price_full': '((//div[@data-testid= "mod-bestinstallment"]//div/div)[2]/p)[1]'
             },
             'xpaths_freight':[
                 lambda driver: driver.execute_script('window.scrollTo(0, 300);'),
@@ -117,7 +117,7 @@ def main():
                 'price_full': '//div/b[@class="regularPrice"]'
             },
             'xpaths_freight': [
-                
+                lambda driver : driver.execute_script('window.scrollTo(0, 300);'),
                 lambda driver: driver.find_element(By.ID, 'inputCalcularFrete').send_keys('23900650'),
                 lambda driver: driver.find_element(By.ID, 'botaoCalcularFrete').click(),
                 lambda driver: wait_for_element(driver, By.XPATH, '(//span[@class= "sc-4253a8e4-2 etvZuo"])[2]').text
@@ -210,7 +210,7 @@ def main():
         if driver:
             driver.quit()
             driver = None  # <- Evita o __del__ tentar agir em algo já encerrado
-        print('Programa Finalizado!')
-
+        input(Fore.CYAN + f'\nPrograma Finalizado! Precione enter para fechar o programa.')
+        
 if __name__ == '__main__':
     main()
