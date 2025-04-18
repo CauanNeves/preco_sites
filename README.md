@@ -3,108 +3,90 @@
 ---
 
 ## 🚀 Sobre o Projeto
-Este projeto utiliza a biblioteca **Selenium** para realizar o _web scraping_ de preços em diferentes sites. Ele permite comparar preços de produtos em lojas específicas e exibir o melhor preço encontrado para compras à vista e parcelado, Além de calcular o frete.  
+Este projeto utiliza a biblioteca **Selenium** para realizar o _web scraping_ de preços em diferentes sites.   
+
+# 🕵️ Comparador de Preços com Selenium
+
+Este projeto realiza a coleta automatizada de preços e frete de produtos em diferentes e-commerces brasileiros usando Selenium com Chrome indetectável (undetected-chromedriver). Tem o objetivo de facilitar a comparação de preços de um produto específico. Queria comprar esse gabinete, então resolvi fazer um código que comparasse o preço desse gabinete em diferentes sites e me retornasse qual o site com menor preço, tanto para pagamentos à vista quanto para pagamento parcelado, além de calcular o frete.
 
 ---
 
-## 📋 Pré-requisitos
-
-Antes de executar o projeto, você precisará ter instalado:
-
-1. **Python 3.7 ou superior** 🐍  
-2. **Google Chrome** (versão compatível com o WebDriver do Selenium) 🌐  
-3. **WebDriver do Chrome** (chromedriver) 🛠️  
-4. As dependências do projeto, instaláveis com o comando:
-   ```bash
-   pip install selenium
-   ```
+## 💻 Funcionalidades
+- Acesso automatizado a páginas de produto
+- Captura de preço à vista e parcelado
+- Simulação de cálculo de frete via CEP
+- Exibição da melhor loja com base no valor final (produto + frete)
 
 ---
 
-## 🛠️ Configuração
+## 📦 Executável
 
-1. **Baixe o WebDriver:**  
-   Certifique-se de que o `chromedriver` está disponível em seu sistema e que sua versão corresponde à versão do navegador Google Chrome instalada.  
+Se você só quer **usar o programa**, baixe o arquivo `comparador.exe` (disponível na aba de releases ou na pasta raiz) e execute normalmente. 
 
-2. **Adapte os Links e XPath dos Produtos:**  
-   - Insira os URLs dos produtos que você deseja monitorar.  
-   - Ajuste os `XPath` para corresponder aos elementos específicos que contêm os preços nas páginas-alvo.  
-
-3. **Configuração de Idioma e Preferências do Navegador:**  
-   O script utiliza opções como modo incógnito, idioma configurado para `pt-BR` e desabilitação de notificações.  
+> ⚠️ Dica: Ao executar o `.exe`, aguarde o carregamento das páginas. Algumas lojas têm elementos que demoram um pouco para aparecer.
 
 ---
 
-## 🧩 Estrutura do Código
+## 🧑‍💻 Para desenvolvedores
 
-- **`start_driver`**: Configura e inicia o navegador com as opções desejadas.  
-- **`wait_for_element`**: Aguarda até que um elemento esteja presente na página antes de interagir com ele.  
-- **`formatted_price`**: Converte o preço extraído de texto para formato numérico (float).  
-- **`scrape_price`**: Realiza o acesso ao site e coleta os preços usando os XPath fornecidos.  
-- **`main`**: Ponto de entrada do programa, orquestrando o scraping, comparação de preços e exibição dos resultados.  
+Caso queira rodar o código-fonte ou modificar o script, siga os passos abaixo:
 
----
+### 🔧 Pré-requisitos
 
-## 🖥️ Como Executar
+Você precisa ter o Python instalado. Em seguida, instale as dependências:
 
-1. Clone este repositório em sua máquina local:
-   ```bash
-   git clone https://github.com/CauanNeves/preco_sites.git
-   ```
+```bash
+pip install selenium undetected-chromedriver colorama
+```
 
-2. Acesse o diretório do projeto:
-   ```bash
-   cd preco-sites
-   ```
+### ▶️ Como executar
 
-3. Instale as dependências necessárias:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+python app.py
+```
 
-4. Execute o script principal:
-   ```bash
-   python app.py
-   ```
+O script abrirá um navegador automaticamente, acessará os sites e mostrará no terminal o melhor preço (à vista e parcelado), com frete incluso.
 
 ---
 
-## ✨ Funcionalidades
-
-1. **Coleta de Preços**:
-   - Monitora produtos em múltiplos sites.  
-   - Realiza o parsing de preços à vista e a prazo.  
-
-2. **Comparação de Preços**:
-   - Determina qual loja oferece o preço mais baixo para pagamento à vista.  
-
-3. **Relatórios Dinâmicos**:
-   - Exibe os resultados em um formato simples e legível.  
+## 🏪 Lojas monitoradas
+- Magazine Luiza
+- Kabum (2 variações)
+- Terabyte
 
 ---
 
-## 🐛 Possíveis Problemas e Soluções
+## ✏️ Personalização
 
-- **Problema**: O XPath do preço mudou ou está incorreto.  
-  **Solução**: Atualize os valores de XPath no código de acordo com a estrutura do site.
-
-- **Problema**: O `chromedriver` não está compatível com a versão do Google Chrome.  
-  **Solução**: Atualize o `chromedriver` para a versão correspondente.  
-
-- **Problema**: Bloqueios no site por automação.  
-  **Solução**: Utilize atrasos entre requisições ou métodos como "User-Agent Spoofing".  
+Para adicionar mais produtos ou lojas, edite a lista `links` no final do código. Cada entrada pode conter:
+- `site`: Nome da loja
+- `url`: Link do produto
+- `xpaths_price`: XPaths para preços
+- `xpaths_freight`: Ações a serem executadas para buscar o frete
 
 ---
 
-## 🏆 Contribuições
+## 🔚 Exemplo de Saída
 
-Sinta-se à vontade para abrir _issues_ ou _pull requests_ para melhorar o código ou sugerir novas funcionalidades!  
+```bash
+Magazine Luiza: {'price_in_cash': 254.1, 'price_full': 269.9}
+Magazine Luiza: {'frete': 19.9}
+...
+Caso você for comprar à vista, o melhor preço é na loja Kabum (2) com o valor de 248.5 reais.
+```
+
+[![Assista ao vídeo](https://img.youtube.com/vi/4eml7UQJIso/hqdefault.jpg)](https://www.youtube.com/watch?v=4eml7UQJIso)
+
+
+---
+
+## 🛠️ Feito com:
+- [Python](https://www.python.org/)
+- [Selenium](https://selenium.dev/)
+- [Undetected ChromeDriver](https://github.com/ultrafunkamsterdam/undetected-chromedriver)
+- [Colorama](https://pypi.org/project/colorama/)
 
 ---
 
 ### 📬 Contato
 Qualquer dúvida, entre em contato pelo e-mail: **c.neves8903@gmail.com**.
-
----
-
-**Divirta-se raspando os preços!** 🎉

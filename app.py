@@ -92,6 +92,10 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
 
 # Função principal
 def main():
+    
+    #Mude seu CEP aqui
+    cep: '23900650'
+    
     links = [
         {
             'site': 'Magazine Luiza',
@@ -103,7 +107,7 @@ def main():
             'xpaths_freight':[
                 lambda driver: driver.execute_script('window.scrollTo(0, 300);'),
                 lambda driver: driver.find_element(By.XPATH, '//span[@class= "sc-fscmHZ ldoANx"]').click(),
-                lambda driver: wait_for_element(driver, By.ID, 'zipcode').send_keys('23900650'),
+                lambda driver: wait_for_element(driver, By.ID, 'zipcode').send_keys(cep),
                 lambda driver: sleep(2),
                 lambda driver: driver.execute_script('window.scrollTo(0, 300);'),
                 lambda driver: wait_for_element(driver, By.XPATH, '//p[@class= "sc-dcJsrY eLxcFM sc-pKqro cAJMya"]').text
@@ -118,7 +122,7 @@ def main():
             },
             'xpaths_freight': [
                 lambda driver : driver.execute_script('window.scrollTo(0, 300);'),
-                lambda driver: driver.find_element(By.ID, 'inputCalcularFrete').send_keys('23900650'),
+                lambda driver: driver.find_element(By.ID, 'inputCalcularFrete').send_keys(cep),
                 lambda driver: driver.find_element(By.ID, 'botaoCalcularFrete').click(),
                 lambda driver: wait_for_element(driver, By.XPATH, '(//span[@class= "sc-4253a8e4-2 etvZuo"])[2]').text
                 ] 
@@ -132,7 +136,7 @@ def main():
             },
             'xpaths_freight': [
                 lambda driver : driver.execute_script('window.scrollTo(0, 300);'),
-                lambda driver: driver.find_element(By.ID, 'inputCalcularFrete').send_keys('23900650'),
+                lambda driver: driver.find_element(By.ID, 'inputCalcularFrete').send_keys(cep),
                 lambda driver: driver.find_element(By.ID, 'botaoCalcularFrete').click(),
                 lambda driver: wait_for_element(driver, By.XPATH, '//span[@class= "sc-4253a8e4-2 etvZuo"]').text
                 ] 
@@ -147,7 +151,7 @@ def main():
             'xpaths_freight': [
                 lambda driver: driver.execute_script('window.scrollTo(0, 600);'),
                 lambda driver: driver.find_element(By.XPATH, '//button[@class= "btComDet btn tbt_comprar"]').click(),
-                lambda driver: wait_for_element(driver, By.XPATH, '//input[@class= "cepInput shopp-cep"]').send_keys('23900650'),
+                lambda driver: wait_for_element(driver, By.XPATH, '//input[@class= "cepInput shopp-cep"]').send_keys(cep),
                 lambda driver: driver.find_element(By.XPATH, '//button[@class= "calcFrete btcalcular visible"]').click(),
                 lambda driver: wait_for_element(driver, By.XPATH, '(//div[@class= "minicart-frete-value"])[1]').text
             ]
