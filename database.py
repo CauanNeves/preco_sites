@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime 
 
 class Database:
     def __init__(self, db_path= 'precos.db'):
@@ -18,7 +19,7 @@ class Database:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nome_produto TEXT NOT NULL,
                     site TEXT NOT NULL,
-                    url TEXT NOT NULL,
+                    url TEXT NOT NULL
                 );
             ''')
             conn.commit()
@@ -52,6 +53,19 @@ class Database:
             cursor.execute('INSERT INTO produto (nome_produto, site, url) VALUES (?, ?, ?)', (nome_produto, site, url))
             conn.commit()
     
+    def adicionar_produto_com_links(self, nome_produto, lista_sites_links):
+        produto_id = self.insert_produto(nome_produto)
+        for site, link in lista_sites_links:
+            self.insert_link(produto_id, site, link)
+
+
+    #Buscar id do produto
+    def id_produto(self, nome_produto):
+        with self._connect() as conn:
+            cursor= conn.cursor()
+            cursor.execute('SELECT id FROM produto WHERE nome_produto = ?', (nome_produto,))
+            return cursor.fetchone()
+
     #Exibindo tabela produto
     def products(self):
         with self._connect() as conn:
@@ -59,12 +73,14 @@ class Database:
             cursor.execute('SELECT * FROM produto')
             return cursor.fetchall()
     
-    def edit_url(self, nome_produto, novo_url, site):
+    #Editando link
+    def edit_url(self, id, novo_url):
         with self._connect() as conn:
             cursor = conn.cursor()
-            cursor.execute("UPDATE produto SET url = ? WHERE nome_produto = ? and site = ?", (novo_url, nome_produto, site))
+            cursor.execute('UPDATE produto SET url = ? WHERE id = ?', (novo_url, id))
             conn.commit()
 
+    #Excluindo Produto
     def del_product(self, nome_produto):
         with self._connect() as conn:
             cursor = conn.cursor()
@@ -76,7 +92,7 @@ class Database:
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute('DELETE FROM cep')  # mantém um único CEP
-            cursor.execute('INSERT INTO cep (id, n_cep) VALUES (1, ?)' (cep,))
+            cursor.execute('INSERT INTO cep (n_cep) VALUES (?)', (cep,))
             conn.commit()
     
     #Retornando CEP
@@ -86,4 +102,27 @@ class Database:
             cursor.execute('SELECT n_cep FROM cep WHERE id = 1')
             result = cursor.fetchone()
             return result[0] if result else None
+        
+    #Historico
+    def save_history(self, produto_id, preco_vista, preco_parcelado):
+        date= datetime.now().strftime('%d/%m/%Y')
+        with self._connect() as conn:
+            cursor= conn.cursor()
+            cursor.execute('INSERT INTO historico (produto_id, data, preco_vista, preco_parcelado) VALUES (?, ?, ?, ?)', (produto_id, date, preco_vista, preco_parcelado))
+            conn.commit()
     
+    #Buscando no Histórico
+    def search_history(self, produto_id):
+        with self._connect() as conn:
+            cursor= conn.cursor()
+            cursor.execute('SELECT date, preco_vista, preco_parcelado FROM historico WHERE produto_id = ?', (produto_id,))
+            return cursor.fetchall()
+    
+    #RESETANDO BANCO DE DADOS
+    def reset_db(self):
+        with self._connect() as conn:
+            cursor= conn.cursor()
+            cursor.execute('DELETE FROM produto')
+            cursor.execute('DELETE FROM cep')
+            cursor.execute('DELETE FROM historico')
+            conn.commit()
