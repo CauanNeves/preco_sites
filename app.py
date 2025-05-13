@@ -7,6 +7,7 @@ import undetected_chromedriver as uc
 import sys
 import io
 from colorama import Fore, init
+
 #Resetando a cor do prompt 
 init(autoreset=True)
 
