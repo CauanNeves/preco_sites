@@ -37,7 +37,7 @@ class Database:
             #Tabela CEP
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS cep(
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id INTEGER,
                     n_cep INTEGER NOT NULL           
                 );
             ''')
@@ -115,7 +115,7 @@ class Database:
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute('DELETE FROM cep')  # mantém um único CEP
-            cursor.execute('INSERT INTO cep (n_cep) VALUES (?)', (cep,))
+            cursor.execute('INSERT INTO cep (id, n_cep) VALUES (?, ?)', (1, cep))
             conn.commit()
     
     #Retornando CEP

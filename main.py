@@ -1,8 +1,10 @@
-import customtkinter as ctk
+from views.new_product_view import NewProductWindow
+from views.reset_db_view import ResetDBWindow
+from views.cep_view import CepWindow
+from views.about_view import About
 from database import Database
 from tkinter import messagebox
-from views.new_product_view import NewProductWindow
-from views.cep_view import CepWindow
+import customtkinter as ctk
 
 
 db= Database()
@@ -22,7 +24,6 @@ def start():
 
 def cep():
     CepWindow(window, db)
-    # nova tela pedindo o novo cep
 
 def new_product():
     NewProductWindow(window, db)
@@ -36,12 +37,10 @@ def del_product():
     #tela de confirmação
 
 def about():
-    pass
-    #Tela explicando sobre o projeto
+    About(window)
 
 def reset_db():
-    db.reset_db()
-    #tela de confirmação 
+    ResetDBWindow(window, db)
 
 #Inicia
 window= ctk.CTk()
