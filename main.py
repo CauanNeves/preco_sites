@@ -2,6 +2,8 @@ import customtkinter as ctk
 from database import Database
 from tkinter import messagebox
 from views.new_product_view import NewProductWindow
+from views.cep_view import CepWindow
+
 
 db= Database()
 
@@ -19,7 +21,7 @@ def start():
     # Aqui você chama a função de busca ou inicia a lógica principal
 
 def cep():
-    pass
+    CepWindow(window, db)
     # nova tela pedindo o novo cep
 
 def new_product():
@@ -50,10 +52,6 @@ window.maxsize(300, 220)
 
 #Elementos
 btn_start = ctk.CTkButton(window, width= 280, height= 40, corner_radius= 4, text= ('START'),fg_color= ('#76A646'), command= start)
-if not db.products() or not db.cep():
-    btn_start.configure(state="disabled")
-else:
-    btn_start.configure(state="normal")
 btn_start.grid(row= 0, padx= 5, pady= 5, columnspan= 3, column= 0)
 
 btn_cep= ctk.CTkButton(window, width= 135, height= 40, corner_radius= 4, text= ('CEP'), command= cep)

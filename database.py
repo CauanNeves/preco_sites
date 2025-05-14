@@ -17,9 +17,19 @@ class Database:
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS produto (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    nome_produto TEXT NOT NULL,
+                    nome_produto TEXT NOT NULL
+                );
+            ''')
+            conn.commit()
+
+            #Tabela Link
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS link (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    produto_id INTEGER NOT NULL,
                     site TEXT NOT NULL,
-                    url TEXT NOT NULL
+                    url TEXT NOT NULL,
+                    FOREIGN KEY (produto_id) REFERENCES produto(id)
                 );
             ''')
             conn.commit()
@@ -46,45 +56,58 @@ class Database:
             ''')
             conn.commit()
     
-    #Adicionando dados na tabela produto
-    def add_product(self, nome_produto, site, url):
+    #
+    def insert_product(self, nome_produto):
         with self._connect() as conn:
-            cursor= conn.cursor()
-            cursor.execute('INSERT INTO produto (nome_produto, site, url) VALUES (?, ?, ?)', (nome_produto, site, url))
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO produto (nome_produto) VALUES (?)', (nome_produto,))
             conn.commit()
-    
-    def adicionar_produto_com_links(self, nome_produto, lista_sites_links):
-        produto_id = self.insert_produto(nome_produto)
+            return cursor.lastrowid  # retorna o id do novo produto
+
+    def insert_link(self, produto_id, site, url):
+        with self._connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO link (produto_id, site, url) VALUES (?, ?, ?)', (produto_id, site, url))
+            conn.commit()
+
+    #Adicionando Produto
+    def insert_product_with_links(self, nome_produto, lista_sites_links):
+        produto_id = self.insert_product(nome_produto)
         for site, link in lista_sites_links:
             self.insert_link(produto_id, site, link)
-
 
     #Buscar id do produto
     def id_produto(self, nome_produto):
         with self._connect() as conn:
             cursor= conn.cursor()
             cursor.execute('SELECT id FROM produto WHERE nome_produto = ?', (nome_produto,))
-            return cursor.fetchone()
+            result= cursor.fetchone()
 
-    #Exibindo tabela produto
-    def products(self):
-        with self._connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM produto')
-            return cursor.fetchall()
+            return result[0] if result else None
     
     #Editando link
-    def edit_url(self, id, novo_url):
+    def edit_url(self, link_id, novo_url):
         with self._connect() as conn:
             cursor = conn.cursor()
-            cursor.execute('UPDATE produto SET url = ? WHERE id = ?', (novo_url, id))
+            cursor.execute('UPDATE link SET url = ? WHERE id = ?', (novo_url, link_id))
             conn.commit()
 
-    #Excluindo Produto
-    def del_product(self, nome_produto):
+
+    #Buscando links de um produto
+    def get_links_by_produto(self, produto_id):
         with self._connect() as conn:
             cursor = conn.cursor()
-            cursor.execute('DELETE FROM produto WHERE nome_produto = ?', (nome_produto,))
+            cursor.execute('SELECT site, url FROM link WHERE produto_id = ?', (produto_id,))
+            return cursor.fetchall()
+
+
+    #Excluindo Produto
+    def del_product(self, id_produto):
+        with self._connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM link WHERE produto_id = ?', (id_produto,))
+            cursor.execute('DELETE FROM historico WHERE produto_id = ?', (id_produto,))
+            cursor.execute('DELETE FROM produto WHERE id = ?', (id_produto,))
             conn.commit()
 
     #Adicionando CEP
@@ -125,4 +148,7 @@ class Database:
             cursor.execute('DELETE FROM produto')
             cursor.execute('DELETE FROM cep')
             cursor.execute('DELETE FROM historico')
+            cursor.execute('DELETE FROM link')
+            cursor.execute('DELETE FROM sqlite_sequence')
+
             conn.commit()
