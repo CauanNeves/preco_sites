@@ -1,4 +1,5 @@
 from views.new_product_view import NewProductWindow
+from views.edit_link_view import EditLinkWindow
 from views.reset_db_view import ResetDBWindow
 from views.cep_view import CepWindow
 from views.about_view import About
@@ -29,8 +30,7 @@ def new_product():
     NewProductWindow(window, db)
 
 def edit_link():
-    pass
-    #outra tela pedindo o nome do produto que deseja editar e o url
+    EditLinkWindow(window, db)
 
 def del_product():
     pass

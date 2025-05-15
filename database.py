@@ -86,10 +86,10 @@ class Database:
             return result[0] if result else None
     
     #Editando link
-    def edit_url(self, link_id, novo_url):
+    def edit_url(self, produto_id, site, novo_url):
         with self._connect() as conn:
             cursor = conn.cursor()
-            cursor.execute('UPDATE link SET url = ? WHERE id = ?', (novo_url, link_id))
+            cursor.execute('UPDATE link SET url = ? WHERE produto_id = ? and site = ? ', (novo_url, produto_id , site))
             conn.commit()
 
 
