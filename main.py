@@ -1,5 +1,6 @@
 from views.new_product_view import NewProductWindow
 from views.edit_link_view import EditLinkWindow
+from views.table_view import ListProductWindow
 from views.reset_db_view import ResetDBWindow
 from views.cep_view import CepWindow
 from views.about_view import About
@@ -15,13 +16,7 @@ ctk.set_appearance_mode('dark')
 
 #Funções
 def start():
-    if not db.products():
-        messagebox.showwarning("Aviso", "Nenhum produto cadastrado.")
-        return
-    if not db.cep():
-        messagebox.showwarning("Aviso", "Nenhum CEP cadastrado.")
-        return
-    # Aqui você chama a função de busca ou inicia a lógica principal
+    print(db.table())
 
 def cep():
     CepWindow(window, db)
@@ -32,9 +27,8 @@ def new_product():
 def edit_link():
     EditLinkWindow(window, db)
 
-def del_product():
-    pass
-    #tela de confirmação
+def table():
+    ListProductWindow(window, db)
 
 def about():
     About(window)
@@ -63,8 +57,8 @@ btn_new.grid(row= 1, column= 1, pady= 5, padx= 5)
 btn_link= ctk.CTkButton(window, width= 135, height= 40, corner_radius= 4, text= ('Editar link'), command= edit_link)
 btn_link.grid(row= 2, column= 0, pady= 5, padx= 5)
 
-btn_del= ctk.CTkButton(window, width= 135, height= 40, corner_radius= 4, text= ('Deletar Produto'), command= del_product)
-btn_del.grid(row= 2, column= 1, pady= 5, padx= 5)
+btn_table= ctk.CTkButton(window, width= 135, height= 40, corner_radius= 4, text= ('Ver Tabela'), command= table)
+btn_table.grid(row= 2, column= 1, pady= 5, padx= 5)
 
 btn_about= ctk.CTkButton(window, width= 135, height= 40, corner_radius= 4, text= ('Sobre'), command= about)
 btn_about.grid(row= 3, column= 0, pady= 5, padx= 5)

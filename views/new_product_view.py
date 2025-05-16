@@ -4,6 +4,8 @@ from tkinter import messagebox
 class NewProductWindow(ctk.CTkToplevel):
     def __init__(self, parent, db):
         super().__init__(parent)
+        self.focus_force()
+        
         self.title('Novo Produto')
         self.geometry('500x400')
         self.db = db

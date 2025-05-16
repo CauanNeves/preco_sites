@@ -3,6 +3,7 @@ import customtkinter as ctk
 class About(ctk.CTkToplevel):
     def __init__(self, parent):
         super().__init__(parent)
+        self.focus_force()
         self.title('Sobre')
         self.geometry('300x400')
         

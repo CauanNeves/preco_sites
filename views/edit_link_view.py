@@ -4,11 +4,13 @@ from tkinter import messagebox
 class EditLinkWindow(ctk.CTkToplevel):
     def __init__(self, parent, db):
         super().__init__(parent)
+        self.focus_force()
+        
         self.title('Editar link')
-        self.geometry('350x240')
-        self.maxsize(350,240)
-        self.minsize(350,240)
-        self.db
+        self.geometry('350x330')
+        self.maxsize(350,330)
+        self.minsize(350,330)
+        self.db = db
 
         #Nome produto
         ctk.CTkLabel(self, text= 'Nome do produto:').pack(pady= (15,5))
@@ -34,8 +36,8 @@ class EditLinkWindow(ctk.CTkToplevel):
 
     #Função
     def att_url(self):
-        product= self.product_entry.get().strip()
-        site= self.site_entry.get().strip().lower()
+        product= self.product_entry.get()
+        site= self.site_entry.get().lower()
         url= self.url_entry.get().strip()
 
         if not product or not site or not url:
@@ -49,7 +51,7 @@ class EditLinkWindow(ctk.CTkToplevel):
             return
         
         try:
-            self.db.edit_url(product_db['id'], site, url)
+            self.db.edit_url(product_db, site, url)
             messagebox.showinfo('Sucesso', f'Link do produto "{product}", no site "{site}" foi atualizado')
             self.destroy()
         except Exception as e:

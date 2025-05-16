@@ -152,3 +152,40 @@ class Database:
             cursor.execute('DELETE FROM sqlite_sequence')
 
             conn.commit()
+
+    def table(self):
+        with self._connect() as conn:
+            cursor= conn.cursor()
+            cursor.execute('''
+                SELECT
+                    l.id as id_link,
+                    p.nome_produto as produto,
+                    l.site as site,
+                    l.url as link
+                FROM produto p
+                JOIN link l ON p.id = l.produto_id
+                ORDER BY l.id desc
+            ''')
+            return cursor.fetchall()
+        
+    def del_selected_link(self, id_link):
+        with self._connect() as conn:
+            cursor= conn.cursor()
+            cursor.execute('DELETE FROM link WHERE id = ?', (id_link, ))
+            conn.commit()
+
+    def filter_product(self, product):
+        with self._connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT
+                    l.id as id_link,
+                    p.nome_produto as produto,
+                    l.site as site,
+                    l.url as link
+                FROM produto p
+                JOIN link l ON p.id = l.produto_id
+                WHERE p.nome_produto LIKE ?
+                ORDER BY l.id DESC
+            ''', (f"%{product}%",))
+            return cursor.fetchall()

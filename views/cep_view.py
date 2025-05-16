@@ -4,6 +4,7 @@ from tkinter import messagebox
 class CepWindow(ctk.CTkToplevel):
     def __init__(self, parent, db):
         super().__init__(parent)
+        self.focus_force()
         
         #config
         self.title('Atualizando CEP')

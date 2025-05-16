@@ -4,6 +4,8 @@ from tkinter import messagebox
 class ResetDBWindow(ctk.CTkToplevel):
     def __init__(self, parent, db):
         super().__init__(parent)
+        self.focus_force()
+
         self.title('Resetar Banco de Dados')
         self.geometry('340x180')
         self.minsize(340, 180)
