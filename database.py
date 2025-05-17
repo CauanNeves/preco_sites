@@ -26,10 +26,11 @@ class Database:
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS link (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    produto_id INTEGER NOT NULL,
+                    id_produto INTEGER NOT NULL,
                     site TEXT NOT NULL,
                     url TEXT NOT NULL,
-                    FOREIGN KEY (produto_id) REFERENCES produto(id)
+                    ativado TEXT NOT NULL,
+                    FOREIGN KEY (id_produto) REFERENCES produto(id)
                 );
             ''')
             conn.commit()
@@ -47,11 +48,11 @@ class Database:
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS historico(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    produto_id INTEGER NOT NULL,
+                    id_produto INTEGER NOT NULL,
                     data TEXT NOT NULL,
                     preco_vista REAL,
                     preco_parcelado REAL,
-                    FOREIGN KEY (produto_id) REFERENCES produto(id) 
+                    FOREIGN KEY (id_produto) REFERENCES produto(id) 
                 )
             ''')
             conn.commit()
@@ -64,17 +65,21 @@ class Database:
             conn.commit()
             return cursor.lastrowid  # retorna o id do novo produto
 
-    def insert_link(self, produto_id, site, url):
+    def insert_link(self, id_produto, site, url):
         with self._connect() as conn:
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO link (produto_id, site, url) VALUES (?, ?, ?)', (produto_id, site, url))
+            cursor.execute('INSERT INTO link (id_produto, site, url, ativado) VALUES (?, ?, ?, ?)', (id_produto, site, url, 'Sim'))
             conn.commit()
 
     #Adicionando Produto
     def insert_product_with_links(self, nome_produto, lista_sites_links):
-        produto_id = self.insert_product(nome_produto)
+        id_produto = self.insert_product(nome_produto)
         for site, link in lista_sites_links:
-            self.insert_link(produto_id, site, link)
+            self.insert_link(id_produto, site, link)
+        with self._connect() as conn:
+            cursor= conn.cursor()
+            cursor.execute('UPDATE link SET ativado = ? WHERE id_produto != ?', ('Não', id_produto))
+            conn.commit()
 
     #Buscar id do produto
     def id_produto(self, nome_produto):
@@ -86,18 +91,18 @@ class Database:
             return result[0] if result else None
     
     #Editando link
-    def edit_url(self, produto_id, site, novo_url):
+    def edit_url(self, id_produto, site, novo_url):
         with self._connect() as conn:
             cursor = conn.cursor()
-            cursor.execute('UPDATE link SET url = ? WHERE produto_id = ? and site = ? ', (novo_url, produto_id , site))
+            cursor.execute('UPDATE link SET url = ? WHERE id_produto = ? and site = ? ', (novo_url, id_produto , site))
             conn.commit()
 
 
     #Buscando links de um produto
-    def get_links_by_produto(self, produto_id):
+    def get_links_by_produto(self, id_produto):
         with self._connect() as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT site, url FROM link WHERE produto_id = ?', (produto_id,))
+            cursor.execute('SELECT site, url FROM link WHERE id_produto = ?', (id_produto,))
             return cursor.fetchall()
 
 
@@ -105,8 +110,8 @@ class Database:
     def del_product(self, id_produto):
         with self._connect() as conn:
             cursor = conn.cursor()
-            cursor.execute('DELETE FROM link WHERE produto_id = ?', (id_produto,))
-            cursor.execute('DELETE FROM historico WHERE produto_id = ?', (id_produto,))
+            cursor.execute('DELETE FROM link WHERE id_produto = ?', (id_produto,))
+            cursor.execute('DELETE FROM historico WHERE id_produto = ?', (id_produto,))
             cursor.execute('DELETE FROM produto WHERE id = ?', (id_produto,))
             conn.commit()
 
@@ -127,18 +132,18 @@ class Database:
             return result[0] if result else None
         
     #Historico
-    def save_history(self, produto_id, preco_vista, preco_parcelado):
+    def save_history(self, id_produto, preco_vista, preco_parcelado):
         date= datetime.now().strftime('%d/%m/%Y')
         with self._connect() as conn:
             cursor= conn.cursor()
-            cursor.execute('INSERT INTO historico (produto_id, data, preco_vista, preco_parcelado) VALUES (?, ?, ?, ?)', (produto_id, date, preco_vista, preco_parcelado))
+            cursor.execute('INSERT INTO historico (id_produto, data, preco_vista, preco_parcelado) VALUES (?, ?, ?, ?)', (id_produto, date, preco_vista, preco_parcelado))
             conn.commit()
     
     #Buscando no Histórico
-    def search_history(self, produto_id):
+    def search_history(self, id_produto):
         with self._connect() as conn:
             cursor= conn.cursor()
-            cursor.execute('SELECT date, preco_vista, preco_parcelado FROM historico WHERE produto_id = ?', (produto_id,))
+            cursor.execute('SELECT date, preco_vista, preco_parcelado FROM historico WHERE id_produto = ?', (id_produto,))
             return cursor.fetchall()
     
     #RESETANDO BANCO DE DADOS
@@ -161,9 +166,10 @@ class Database:
                     l.id as id_link,
                     p.nome_produto as produto,
                     l.site as site,
-                    l.url as link
+                    l.url as link,
+                    l.ativado
                 FROM produto p
-                JOIN link l ON p.id = l.produto_id
+                JOIN link l ON p.id = l.id_produto
                 ORDER BY l.id desc
             ''')
             return cursor.fetchall()
@@ -182,10 +188,35 @@ class Database:
                     l.id as id_link,
                     p.nome_produto as produto,
                     l.site as site,
-                    l.url as link
+                    l.url as link,
+                    l.ativado as ativado
                 FROM produto p
-                JOIN link l ON p.id = l.produto_id
+                JOIN link l ON p.id = l.id_produto
                 WHERE p.nome_produto LIKE ?
-                ORDER BY l.id DESC
+                ORDER BY l.ativado DESC
             ''', (f"%{product}%",))
             return cursor.fetchall()
+        
+    def activate(self, id, site):
+        with self._connect() as conn:
+            cursor= conn.cursor()
+            cursor.execute('UPDATE link SET ativado = ? WHERE id = ? AND site = ?', ('Sim', id, site))
+            conn.commit()
+            
+    def disable(self, id):
+        with self._connect() as conn:
+            cursor= conn.cursor()
+            cursor.execute('UPDATE link SET ativado = ? WHERE id = ?', ('Não', id))
+            conn.commit()
+
+    #Função em conjunto com a ativação de produtos do views.table_view. 
+    def product_active(self):
+        with self._connect() as conn:
+            cursor= conn.cursor()
+
+            is_active= cursor.execute('SELECT p.nome_produto FROM produto p JOIN link l on p.id = l.id_produto WHERE l.ativado == ?', ('Sim', ))
+            try:
+                return is_active.fetchone()[0]
+            
+            except IndexError:
+                return None

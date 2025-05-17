@@ -16,7 +16,7 @@ ctk.set_appearance_mode('dark')
 
 #Funções
 def start():
-    print(db.table())
+    print(db.activate(1))
 
 def cep():
     CepWindow(window, db)

@@ -28,16 +28,18 @@ class ListProductWindow(ctk.CTkToplevel):
         style.configure('Treeview', background='#2A2D2E', foreground='white', fieldbackground='#2A2D2E', rowheight=25)
         style.map('Treeview', background=[('selected', '#4D93D9')])
 
-        self.tree= ttk.Treeview(frame, columns= ('id', 'produto', 'site', 'url'), show= 'headings')
+        self.tree= ttk.Treeview(frame, columns= ('id', 'produto', 'site', 'url', 'ativado'), show= 'headings')
         self.tree.heading('id', text= 'ID')
         self.tree.heading('produto', text= 'Produto')
         self.tree.heading('site', text= 'Site')
         self.tree.heading('url', text= 'URL')
+        self.tree.heading('ativado', text= 'Ativo')
 
         self.tree.column('id', width= 40, anchor= 'center')
-        self.tree.column('produto', width= 150)
+        self.tree.column('produto', width= 130)
         self.tree.column('site', width= 100)
-        self.tree.column('url', width= 290)
+        self.tree.column('url', width= 240)
+        self.tree.column('ativado', width= 100)
 
         self.tree.pack(fill= 'both', expand= True)
 
@@ -46,9 +48,31 @@ class ListProductWindow(ctk.CTkToplevel):
         btn_frame= ctk.CTkFrame(self)
         btn_frame.pack(pady= 10)
 
-        # ctk.CTkButton(btn_frame, text= 'Ativar Produto', fg_color= '##4D93D9', command= self.activate_product).pack(side= 'left', padx= 10)
+        ctk.CTkButton(btn_frame, text= 'Ativar/ Desativar', fg_color= "#10A7BB", command= self.activate_product).pack(side= 'left', padx= 10)
         ctk.CTkButton(btn_frame, text= 'Deletar produto', fg_color= '#E51200', command= self.del_row).pack(side= 'left', padx= 10)
-        ctk.CTkButton(btn_frame, text= 'Fechar', command= self.destroy).pack(pady= 10)
+        ctk.CTkButton(btn_frame, text= 'Fechar', command= self.destroy).pack(padx= 10)
+
+    def activate_product(self):
+        selected= self.tree.selection()
+        if not selected:
+            messagebox.showwarning('Aviso', 'Primeiro selecione a linha que deseja ativar')
+            return
+        
+        id= self.tree.item(selected)['values'][0]
+        product= self.tree.item(selected)['values'][1]
+        site= self.tree.item(selected)['values'][2]
+        is_active= self.tree.item(selected)['values'][4]
+
+        if is_active == 'Não':
+            if self.db.product_active() == None or product == self.db.product_active():
+                self.db.activate(id, site)
+                self.load_data()
+            else:
+                messagebox.showwarning('Aviso', 'Não pode ter dois pordutos diferentes ativos ao mesmo tempo')
+                return
+        else:
+            self.db.disable(id)
+            self.load_data()
 
     def apply_filter(self):
         product= self.entry_filter.get()
@@ -62,7 +86,6 @@ class ListProductWindow(ctk.CTkToplevel):
         
         product= self.tree.item(selected)
         id_link= product['values'][0]
-        product_name= product['values'][1]
 
         confirm= messagebox.askyesno('Confirmação', f'Tem certeza que deseja apagar essa linha?')
         if confirm:
