@@ -3,12 +3,12 @@ from views.edit_link_view import EditLinkWindow
 from views.table_view import ListProductWindow
 from views.reset_db_view import ResetDBWindow
 from views.cep_view import CepWindow
-from views.about_view import About
+from views.about_view import AboutWindow
 from database import Database
 from tkinter import messagebox
 import customtkinter as ctk
 
-
+#Banco de dados
 db= Database()
 
 #Tema
@@ -16,7 +16,7 @@ ctk.set_appearance_mode('dark')
 
 #Funções
 def start():
-    print(db.activate(1))
+    print(db.products_active()[2][2])
 
 def cep():
     CepWindow(window, db)
@@ -31,12 +31,12 @@ def table():
     ListProductWindow(window, db)
 
 def about():
-    About(window)
+    AboutWindow(window)
 
 def reset_db():
     ResetDBWindow(window, db)
 
-#Inicia
+#Iniciando
 window= ctk.CTk()
 window.title('Economiza Aí')
 window.geometry('300x220')

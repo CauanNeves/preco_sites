@@ -49,9 +49,12 @@ class Database:
                 CREATE TABLE IF NOT EXISTS historico(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     id_produto INTEGER NOT NULL,
-                    data TEXT NOT NULL,
+                    site TEXT NOT NULL,
                     preco_vista REAL,
                     preco_parcelado REAL,
+                    frete REAL,
+                    data TEXT NOT NULL,
+                    hora TEXT NOT NULL,
                     FOREIGN KEY (id_produto) REFERENCES produto(id) 
                 )
             ''')
@@ -132,11 +135,12 @@ class Database:
             return result[0] if result else None
         
     #Historico
-    def save_history(self, id_produto, preco_vista, preco_parcelado):
+    def save_history(self, id_produto, site, preco_vista, preco_parcelado, frete):
         date= datetime.now().strftime('%d/%m/%Y')
+        hour= datetime.now().strftime('%H:%M')
         with self._connect() as conn:
             cursor= conn.cursor()
-            cursor.execute('INSERT INTO historico (id_produto, data, preco_vista, preco_parcelado) VALUES (?, ?, ?, ?)', (id_produto, date, preco_vista, preco_parcelado))
+            cursor.execute('INSERT INTO historico (id_produto, site, preco_vista, preco_parcelado, frete, data, hora) VALUES (?, ?, ?, ?, ?, ?, ?)', (id_produto, site, preco_vista, preco_parcelado, frete, date, hour))
             conn.commit()
     
     #Buscando no Histórico
@@ -219,4 +223,14 @@ class Database:
                 return is_active.fetchone()[0]
             
             except IndexError:
+                return None
+            
+    def products_active(self):
+        with self._connect() as conn:
+            cursor= conn.cursor()
+
+            products= cursor.execute('SELECT site, url, id_produto FROM link')
+            try:
+                return products.fetchall()
+            except:
                 return None
