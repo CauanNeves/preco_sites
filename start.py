@@ -6,6 +6,7 @@ from colorama import Fore, init
 from database import Database
 from time import sleep
 import sys
+import re
 import io
 
 #Resetando a cor do prompt 
@@ -110,13 +111,25 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
                 terabyte_product += 1
 
 
-        #Coletando os preços
-        for key, xpath in xpaths.items():  
+        # Coletando os preços
+        for key, xpath_list in xpaths.items():
             try:
-                element = wait_for_element(driver, By.XPATH, xpath).text
-                prices_dict[site][key] = formatted_price(element) #Adiciona o valor formatado ao dicionário
+                for x in xpath_list:
+                    element_text = wait_for_element(driver, By.XPATH, x).text
+                    if element_text:
+                        match = re.search(r'^\s*([\d.,]+)', element_text)
+                        if match:
+                            prices_dict[site][key] = formatted_price(match.group(1)) # Adiciona valor formatado
+                            break
+                    try:
+                        prices_dict[site][key]= formatted_price(element_text)
+                        break
+                    except:
+                        pass
+
             except Exception as e:
-                print(f"Erro ao buscar o preço '{key}' em {site}.")
+                print(f'[Erro] Coleta de preço para "{key}": {e}')
+
         
         #Coletando o frete
         if freight_actions: #Verifica se existe e não está vazia
@@ -140,36 +153,36 @@ def main():
         {
             'site': 'Magazine Luiza',
             'xpaths_price': {
-                'price_in_cash': '//p[@data-testid= "price-value"]',
-                'price_full': '((//div[@data-testid= "mod-bestinstallment"]//div/div)[2]/p)[1]'
+                'price_in_cash': ['//p[@data-testid= "price-value"]'],
+                'price_full': ['((//div[@data-testid= "mod-bestinstallment"]//div/div)[2]/p)[1]', '//div[@data-testid="price-default"]/span']
             },
             'xpaths_freight':[
                 lambda driver: driver.execute_script('window.scrollTo(0, 300);'),
                 lambda driver: driver.find_element(By.XPATH, '//span[@class= "sc-fscmHZ ldoANx"]').click(),
-                lambda driver: wait_for_element(driver, By.ID, 'zipcode').send_keys(db.cep()),
+                lambda driver: wait_for_element(driver, By.XPATH, '//input[@data-testid= "zipcode-input"]').send_keys(db.cep()),
                 lambda _: sleep(2),
                 lambda driver: driver.execute_script('window.scrollTo(0, 400);'),
-                lambda driver: driver.find_element(By.XPATH, '//p[@class= "sc-dcJsrY eLxcFM sc-pKqro cAJMya"]').text
+                lambda driver: driver.find_element(By.XPATH, '(//div[@data-testid= "shipping-item"]/p)[2]').text
             ]
         },
         {
             'site': 'Kabum',
             'xpaths_price': {
-                'price_in_cash': '//div[@id= "blocoValores"]/div[2]//h4',
-                'price_full': '//div/b[@class="regularPrice"]'
+                'price_in_cash': ['//div[@id= "blocoValores"]/div[2]//h4'],
+                'price_full': ['//div/b[@class="regularPrice"]']
             },
             'xpaths_freight': [
                 lambda driver : driver.execute_script('window.scrollTo(0, 300);'),
-                lambda driver: wait_for_element(driver, By.ID, 'inputCalcularFrete').send_keys(db.cep()),
-                lambda driver: driver.find_element(By.ID, 'botaoCalcularFrete').click(),
+                lambda driver: wait_for_element(driver, By.XPATH, '//input[@data-testid= "ZipCodeInput"]').send_keys(db.cep()),
+                lambda driver: driver.find_element(By.XPATH, '//form[@id= "formularioCalcularFrete"]//button').click(),
                 lambda driver: wait_for_element(driver, By.XPATH, '//div[@id= "listaOpcoesFrete"]/div[2]/span[2]').text
                 ] 
         },
         {   
             'site': 'Terabyte',
             'xpaths_price': {
-                'price_in_cash': '//p[@id="valVista"]',
-                'price_full': '(//span[@id="valParc"])[2]'
+                'price_in_cash': ['//p[@id="valVista"]'],
+                'price_full': ['(//span[@id="valParc"])[2]']
             },
             'xpaths_freight': [
                 lambda driver: driver.execute_script('window.scrollTo(0, 600);'),
