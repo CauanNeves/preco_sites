@@ -114,8 +114,8 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
         # Coletando os preços
         for key, xpath_list in xpaths.items():
             try:
-                for x in xpath_list:
-                    element_text = wait_for_element(driver, By.XPATH, x).text
+                for xpath in xpath_list:
+                    element_text = wait_for_element(driver, By.XPATH, xpath).text
                     if element_text:
                         match = re.search(r'^\s*([\d.,]+)', element_text)
                         if match:
@@ -153,12 +153,12 @@ def main():
         {
             'site': 'Magazine Luiza',
             'xpaths_price': {
-                'price_in_cash': ['//p[@data-testid= "price-value"]'],
+                'price_in_cash': ['(//p[@data-testid= "price-value"])[1]'],
                 'price_full': ['((//div[@data-testid= "mod-bestinstallment"]//div/div)[2]/p)[1]', '//div[@data-testid="price-default"]/span']
             },
             'xpaths_freight':[
                 lambda driver: driver.execute_script('window.scrollTo(0, 300);'),
-                lambda driver: driver.find_element(By.XPATH, '//span[@class= "sc-fscmHZ ldoANx"]').click(),
+                lambda driver: driver.find_element(By.XPATH, '//div[@data-testid= "shipping-button"]').click(),
                 lambda driver: wait_for_element(driver, By.XPATH, '//input[@data-testid= "zipcode-input"]').send_keys(db.cep()),
                 lambda _: sleep(2),
                 lambda driver: driver.execute_script('window.scrollTo(0, 400);'),
@@ -229,10 +229,13 @@ def main():
             for loja in lojas
         }
 
+        result= []
         for tipo, descricao in tipos.items():
             melhor_loja = min(lojas, key=lambda loja: precos_totais[loja][tipo])
             melhor_preco = precos_totais[melhor_loja][tipo]
-            print(Fore.LIGHTYELLOW_EX + f"\nCaso você for comprar {descricao}, o melhor preço é na loja {melhor_loja} com o valor de {melhor_preco} reais.")
+            result.append(f'\nCaso você for comprar {descricao}, o melhor preço é na loja {melhor_loja} com o valor de {melhor_preco} reais.')
+
+        return result
         
     except Exception as e:
         print(f'Erro ao consultar os preços: {e}')
@@ -243,4 +246,4 @@ def main():
             driver = None  # <- Evita o __del__ tentar agir em algo já encerrado
         
 if __name__ == '__main__':
-    main()
+    print(main())

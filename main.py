@@ -5,6 +5,7 @@ from views.reset_db_view import ResetDBWindow
 from views.cep_view import CepWindow
 from views.about_view import AboutWindow
 from database import Database
+from start import main
 from tkinter import messagebox
 import customtkinter as ctk
 
@@ -16,7 +17,7 @@ ctk.set_appearance_mode('dark')
 
 #Funções
 def start():
-    print(db.products_active()[2][2])
+    main()
 
 def cep():
     CepWindow(window, db)
