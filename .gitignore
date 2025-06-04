@@ -1,0 +1,47 @@
+# ───── Arquivos Python compilados ─────
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ───── Ambientes Virtuais ─────
+env/
+venv/
+.venv/
+.ENV/
+ENV/
+
+# ───── Configurações de IDEs ─────
+.vscode/
+.idea/
+
+# ───── Arquivos temporários e de sistema ─────
+.DS_Store
+Thumbs.db
+
+# ───── Arquivos de log e temporários ─────
+*.log
+*.tmp
+
+# ───── Banco de Dados (se for SQLite local) ─────
+*.sqlite3
+*.db
+
+# ───── Interface Gráfica (se gerar arquivos temporários) ─────
+*.tcl
+*.tk
+
+# ───── ChromeDriver baixado localmente (se aplicável) ─────
+chromedriver
+chromedriver.exe
+
+# ───── Arquivos sensíveis ou de configuração ─────
+.env
+*.env
+*.ini
+config.yaml
+secret*.json
+
+# ───── Pastas de cache de bibliotecas ─────
+.cache/
+__pypackages__/
+pip-wheel-metadata/
