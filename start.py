@@ -84,18 +84,12 @@ def retry(action, max_attempts=5, wait_seconds=1, on_fail=None):
     
 
 # Scraping
-def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freight_actions=None):
+def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freight_actions=None, stock_xpath=None):
     global terabyte_product
     try:
         print(Fore.CYAN + f'Acessando: {site}')
         driver.get(link)
-        
-        if site not in prices_dict:
-            prices_dict[site] = {}
-            
-        if site not in prices_freight:
-            prices_freight[site] = {}
-        
+
         #Fecha a aba de anúncio
         if site == 'Terabyte' and terabyte_product == 0:
             def fechar_popup_terabyte():
@@ -105,32 +99,48 @@ def scrape_price(driver, link, xpaths, site, prices_dict, prices_freight, freigh
                 """)
                 driver.execute_script('window.scrollTo(0, 600);')
                 sleep(1)
-
             result = retry(fechar_popup_terabyte, max_attempts=5, wait_seconds=1)
             if result is not None or result is None:  # Continua sempre, mesmo se falhar
                 terabyte_product += 1
 
-
+        # Verifica se o produto está fora de estoque
+        if stock_xpath:
+            try:
+                wait_for_element(driver, By.XPATH, stock_xpath)
+                return f'Produto indisponível em {site}. Pulando scraping.'
+            except:
+                pass
+        
+        if site not in prices_dict:
+            prices_dict[site] = {}
+            
+        if site not in prices_freight:
+            prices_freight[site] = {}
+        
         # Coletando os preços
         for key, xpath_list in xpaths.items():
-            try:
-                for xpath in xpath_list:
-                    element_text = wait_for_element(driver, By.XPATH, xpath).text
-                    if element_text:
-                        match = re.search(r'^\s*([\d.,]+)', element_text)
-                        if match:
-                            prices_dict[site][key] = formatted_price(match.group(1)) # Adiciona valor formatado
-                            break
-                    try:
-                        prices_dict[site][key]= formatted_price(element_text)
+            if key == 'stock':
+                continue
+            for xpath in xpath_list:
+                try:
+                    def func_value():
+                        return driver.find_element(By.XPATH, xpath).text
+
+                    element_text = retry(func_value, max_attempts=5, wait_seconds=1)
+                    if not element_text:
+                        continue
+
+                    match = re.search(r'^\s*([\d.,]+)', element_text)
+                    if match:
+                        prices_dict[site][key] = formatted_price(match.group(1))
                         break
-                    except:
-                        pass
+                    else:
+                        prices_dict[site][key] = formatted_price(element_text)
+                        break
+                except Exception:
+                    continue
 
-            except Exception as e:
-                print(f'[Erro] Coleta de preço para "{key}": {e}')
 
-        
         #Coletando o frete
         if freight_actions: #Verifica se existe e não está vazia
             for action in freight_actions: #Executa cada ação
@@ -152,6 +162,7 @@ def main():
     xpaths = [
         {
             'site': 'Magazine Luiza',
+            'stock': '//div/h3[@data-testid= "let-me-know-title"]',
             'xpaths_price': {
                 'price_in_cash': ['(//p[@data-testid= "price-value"])[1]'],
                 'price_full': ['((//div[@data-testid= "mod-bestinstallment"]//div/div)[2]/p)[1]', '//div[@data-testid="price-default"]/span']
@@ -169,7 +180,7 @@ def main():
             'site': 'Kabum',
             'xpaths_price': {
                 'price_in_cash': ['//div[@id= "blocoValores"]/div[2]//h4'],
-                'price_full': ['//div/b[@class="regularPrice"]']
+                'price_full': ['//div/b[@class="regularPrice"]', '//div[@id= "blocoValores"]/div[2]//h4']
             },
             'xpaths_freight': [
                 lambda driver : driver.execute_script('window.scrollTo(0, 300);'),
@@ -180,6 +191,7 @@ def main():
         },
         {   
             'site': 'Terabyte',
+            'stock': '//div[@id= "indisponivel"]',
             'xpaths_price': {
                 'price_in_cash': ['//p[@id="valVista"]'],
                 'price_full': ['(//span[@id="valParc"])[2]']
@@ -201,42 +213,85 @@ def main():
         products= db.products_active()
         for product in products:
             if product[0] == 'Magazine Luiza':
-                scrape_price(driver, product[1], xpaths[0]['xpaths_price'], product[0], prices, freight, freight_actions=xpaths[0]['xpaths_freight'])
+                scrape_price(driver, product[1], xpaths[0]['xpaths_price'], product[0], prices, freight, freight_actions=xpaths[0]['xpaths_freight'], stock_xpath=xpaths[0].get('stock'))
             elif product[0] == 'Kabum':
                 scrape_price(driver, product[1], xpaths[1]['xpaths_price'], product[0], prices, freight, freight_actions=xpaths[1]['xpaths_freight'])
             elif product[0] == 'Terabyte':
-                scrape_price(driver, product[1], xpaths[2]['xpaths_price'], product[0], prices, freight, freight_actions=xpaths[2]['xpaths_freight'])
+                scrape_price(driver, product[1], xpaths[2]['xpaths_price'], product[0], prices, freight, freight_actions=xpaths[2]['xpaths_freight'], stock_xpath=xpaths[2].get('stock'))
 
-        product_id= db.products_active()[0][2]
-        for site, price_data in prices.items():
-            db.save_history(product_id, site, price_data['price_in_cash'], price_data['price_full'], freight[site]['frete'])
+        #Fechando o driver
+        if driver:
+            driver.quit()
+            driver = None
+
+        save= input('Deseja Salvar? (s/n)').lower()
+
+        while True:
+            if save == 's':
+                product_id= db.products_active()[0][2]
+                for site, price_data in prices.items():
+                    db.save_history(product_id, site, price_data['price_in_cash'], price_data['price_full'], freight[site]['frete'])
+                break
+            elif save == 'n':
+                break
+            else:
+                print('Responda com "s" para sim e "n" para não')
         
         def calcular_preco_total(loja, tipo_preco):
-            return round(float(prices[loja][tipo_preco]) + float(freight[loja]['frete']), 2)
-                
+            try:
+                preco = float(prices[loja].get(tipo_preco, 0.0))
+                frete = float(freight[loja].get('frete', 0.0))
+                return round(preco + frete, 2)
+            except KeyError:
+                return None  # Loja ou dados ausentes
+            except (TypeError, ValueError):
+                return None  # Dados inválidos (ex: None, strings incorretas)
 
-        lojas = ['Magazine Luiza','Kabum', 'Terabyte']
+        lojas = ['Magazine Luiza', 'Kabum', 'Terabyte']
         tipos = {
             'price_in_cash': 'à vista',
             'price_full': 'parcelado'
         }
 
+        # Filtra apenas lojas válidas (presentes em prices e freight)
+        lojas_disponiveis = [
+            loja for loja in lojas
+            if loja in prices and loja in freight
+        ]
+
+        # Gera o dicionário de preços totais apenas com lojas e preços válidos
         precos_totais = {
             loja: {
                 tipo: calcular_preco_total(loja, tipo)
                 for tipo in tipos
             }
-            for loja in lojas
+            for loja in lojas_disponiveis
         }
 
-        result= []
+        # Resultado final
+        result = []
+
         for tipo, descricao in tipos.items():
-            melhor_loja = min(lojas, key=lambda loja: precos_totais[loja][tipo])
-            melhor_preco = precos_totais[melhor_loja][tipo]
-            result.append(f'\nCaso você for comprar {descricao}, o melhor preço é na loja {melhor_loja} com o valor de {melhor_preco} reais.')
+            # Filtra somente lojas com valor válido para esse tipo de preço
+            lojas_validas = {
+                loja: valor
+                for loja, valores in precos_totais.items()
+                if (valor := valores.get(tipo)) is not None
+            }
+
+            if lojas_validas:
+                melhor_loja = min(lojas_validas, key=lojas_validas.get)
+                melhor_preco = lojas_validas[melhor_loja]
+                result.append(
+                    f'\nCaso você for comprar {descricao}, o melhor preço é na loja {melhor_loja} com o valor de {melhor_preco} reais.'
+                )
+            else:
+                result.append(
+                    f'\nNão foi possível encontrar preços {descricao} em nenhuma loja disponível.'
+                )
 
         return result
-        
+    
     except Exception as e:
         print(f'Erro ao consultar os preços: {e}')
         
