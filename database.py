@@ -229,7 +229,7 @@ class Database:
         with self._connect() as conn:
             cursor= conn.cursor()
 
-            products= cursor.execute('SELECT site, url, id_produto FROM link')
+            products= cursor.execute('SELECT site, url, id_produto FROM link WHERE ativado == ?', ('Sim',))
             try:
                 return products.fetchall()
             except:
